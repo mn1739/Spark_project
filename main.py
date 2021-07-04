@@ -41,7 +41,7 @@ if '(no genres listed)' in genres: genres.remove('(no genres listed)')
 
 movies = movies.withColumn('genres', expr("REPLACE(genres, '|', ', ') AS genres")) \
                .withColumn('year', expr("CAST(LEFT(RIGHT(title, 5), 4) AS INT)")) \
-               .withColumn('genres', expr("CONCAT(year, ' | ', genres) AS genres"))
+               # .withColumn('genres', expr("CONCAT(year, ' | ', genres) AS genres"))
 
 ratings_count = ratings.groupby('movieId').count()
 ratings = ratings.join(ratings_count, on='movieId').filter('count >= 25').drop('count', 'timestamp')
@@ -53,7 +53,7 @@ als = ALS(userCol='userId', itemCol='movieId', ratingCol='rating', nonnegative=T
 users = spark.createDataFrame([Row(userId=0)])
 unique_movies = ratings.select('movieId').distinct().count()
 
-def train_model(ratings, user_ratings, genres_selected='', years=''):
+def train_model(ratings, user_ratings, genres_selected, genres_excluded, years):
     model = als.fit(ratings)
     recos = model.recommendForUserSubset(users, unique_movies).withColumn("rec_exp", explode("recommendations")) \
                  .select(col("rec_exp.movieId"), col("rec_exp.rating")).join(movies, on='movieId').toPandas()
@@ -61,13 +61,22 @@ def train_model(ratings, user_ratings, genres_selected='', years=''):
     recos = recos[~recos['movieId'].isin(watched)]
     if type(years) != str: recos = recos[(recos['year'] >= years[0]) & (recos['year'] <= years[-1])]
     if type(genres_selected) != str:
+        genres_selected = set(genres_selected)
         recos['filter'] = True
         for i, row in recos.iterrows():
-            genres_list = row['genres'][7:].split(', ')
-            genre_set = set(genres_selected).intersection(set(genres_list))
+            genres_list = row['genres'].split(', ')
+            genre_set = genres_selected.intersection(set(genres_list))
             recos.loc[i, 'filter'] = len(genre_set) > 0
         recos = recos[recos['filter']].drop('filter', axis=1)
-    return recos[['title', 'genres']].head(10)
+    if type(genres_excluded) != str:
+        genres_excluded = set(genres_excluded)
+        recos['filter'] = True
+        for i, row in recos.iterrows():
+            genres_list = row['genres'].split(', ')
+            genre_set = genres_excluded.intersection(set(genres_list))
+            recos.loc[i, 'filter'] = len(genre_set) == 0
+        recos = recos[recos['filter']].drop('filter', axis=1)
+    return recos[['title', 'genres']].head(20)
 
 
 # Dash app
@@ -102,8 +111,9 @@ def save_user_ratings(n, rows):
               [Input('run-model', 'n_clicks'),
                State('user-ratings', 'data'),
                State('select-genre', 'value'),
+               State('exclude-genre', 'value'),
                State('time-period', 'value')])
-def run_model(n, user_ratings, genres_selected, years):
+def run_model(n, user_ratings, genres_selected, genres_excluded, years):
     if type(n) == int:
         user_ratings = pd.DataFrame(user_ratings).rename(columns={'MOVIE': 'movieId', 'RATING': 'rating'})
         user_ratings['userId'] = 0
@@ -111,8 +121,9 @@ def run_model(n, user_ratings, genres_selected, years):
         user_ratings = spark.createDataFrame(user_ratings[['movieId', 'userId', 'rating']])
         ratings_mod = user_ratings.unionAll(ratings)
         if not genres_selected or len(genres_selected) == 0: genres_selected = ''
+        if not genres_excluded or len(genres_excluded) == 0: genres_excluded = ''
         if not years or len(years) == 0: years = ''
-        recos = train_model(ratings_mod, user_ratings, genres_selected, years)
+        recos = train_model(ratings_mod, user_ratings, genres_selected, genres_excluded, years)
         return generate_recos_list(recos)
 
 webbrowser.open('http://127.0.0.1:8050/')

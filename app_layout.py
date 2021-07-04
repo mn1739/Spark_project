@@ -7,10 +7,14 @@ def generate_recos_list(recos):
     recos_list = []
     for index, row in recos.iterrows():
         link = 'https://www.google.com/search?q=' + row['title'].replace(' ', '+')
-        item_header = dbc.ListGroupItemHeading(html.A(row['title'], href=link, target='_blank'), style={'margin': 0})
-        item_text = dbc.ListGroupItemText(row['genres'], style={'margin': 0})
-        recos_list.append(dbc.ListGroupItem([item_header, item_text], style={'padding-top': 0, 'padding-bottom': 0}))
+        header = dbc.ListGroupItemHeading(html.A(row['title'], href=link, target='_blank', style={'text-decoration': 'none'}),
+                                               style={'margin': 0, 'font-size': 15})
+        text = dbc.ListGroupItemText(row['genres'], style={'margin': 0, 'font-size': 13})
+        recos_list.append(dbc.ListGroupItem([header, text], style={'padding-top': 0, 'padding-bottom': 0}))
     return dbc.ListGroup(recos_list)
+    # listgroups = []
+    # for i in range(0, len(recos_list), 2): listgroups.append(dbc.ListGroup(recos_list[i:i+2], horizontal=True))
+    # return listgroups
 
 def get_layout(movies_dict, genres, user_ratings_file, user_ratings_df):
     layout = html.Div([
@@ -22,7 +26,7 @@ def get_layout(movies_dict, genres, user_ratings_file, user_ratings_df):
                     value=1,
                     placeholder='Select a Movie',
                     clearable=False
-                ), width=3
+                ), width=3, style={'padding-right': 0}
             ),
             dbc.Col(
                 dcc.Slider(
@@ -34,17 +38,17 @@ def get_layout(movies_dict, genres, user_ratings_file, user_ratings_df):
             ),
             dbc.Col(
                 dbc.Button(
-                    'Add rating',
+                    '➕',
                     id='add-rating',
                     color='primary'
-                ), width='auto', style={'padding-right': 0}
+                ), width='auto', style={'padding': 0}
             ),
             dbc.Col(
                 dbc.Button(
                     'Save ratings',
                     id='save-ratings',
                     color='warning'
-                ), width='auto'
+                ), width='auto', style={'padding-left': 10, 'padding-right': 5}
             ),
             dbc.Col(
                 dcc.Dropdown(
@@ -52,18 +56,26 @@ def get_layout(movies_dict, genres, user_ratings_file, user_ratings_df):
                     options=[{'label': genre, 'value': genre} for genre in genres],
                     multi=True,
                     placeholder='Filter by genre'
-                ), width=3
+                )
+            ),
+            dbc.Col(
+                dcc.Dropdown(
+                    id='exclude-genre',
+                    options=[{'label': genre, 'value': genre} for genre in genres],
+                    multi=True,
+                    placeholder='Exclude genres'
+                ), style={'padding-left': 0}
             ),
             dbc.Col(
                 dbc.Button(
-                    'Get recommendations',
+                    '▶',
                     id='run-model',
                     color='success'
-                ), width='auto'
+                ), width='auto', style={'padding-left': 0}
             )
         ]),
 
-        html.Br(), html.Br(),
+        html.Br(),
 
         dbc.Row([
             dbc.Col(
@@ -90,7 +102,7 @@ def get_layout(movies_dict, genres, user_ratings_file, user_ratings_df):
                         },
                         {
                             'if': {'column_id': 'RATING'},
-                            'width': '15%'
+                            'width': '12%'
                         }
                     ],
                     style_data_conditional=[
@@ -103,7 +115,7 @@ def get_layout(movies_dict, genres, user_ratings_file, user_ratings_df):
                         'backgroundColor': 'white',
                         'fontWeight': 'bold'
                     }
-                ), style={'padding-right': 60}
+                ), style={'padding-right': 40}, width=5
             ),
             dbc.Col(
                 dbc.Spinner(
@@ -129,7 +141,7 @@ def get_layout(movies_dict, genres, user_ratings_file, user_ratings_df):
                     allowCross=False,
                     vertical=True
                 )
-            ], width=1, style={'padding-left': 45})
+            ], width=1, style={'padding-left': 30, 'padding-right': 0})
         ]),
-    ], style={'padding': 30})
+    ], style={'padding': 20})
     return layout
