@@ -40,8 +40,7 @@ genres = (set(genres))
 if '(no genres listed)' in genres: genres.remove('(no genres listed)')
 
 movies = movies.withColumn('genres', expr("REPLACE(genres, '|', ', ') AS genres")) \
-               .withColumn('year', expr("CAST(LEFT(RIGHT(title, 5), 4) AS INT)")) \
-               # .withColumn('genres', expr("CONCAT(year, ' | ', genres) AS genres"))
+               .withColumn('year', expr("CAST(LEFT(RIGHT(title, 5), 4) AS INT)"))
 
 ratings_count = ratings.groupby('movieId').count()
 ratings = ratings.join(ratings_count, on='movieId').filter('count >= 25').drop('count', 'timestamp')

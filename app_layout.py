@@ -4,17 +4,20 @@ import dash_bootstrap_components as dbc
 from dash_table import DataTable
 
 def generate_recos_list(recos):
-    recos_list = []
+    cards = []
     for index, row in recos.iterrows():
         link = 'https://www.google.com/search?q=' + row['title'].replace(' ', '+')
-        header = dbc.ListGroupItemHeading(html.A(row['title'], href=link, target='_blank', style={'text-decoration': 'none'}),
-                                               style={'margin': 0, 'font-size': 15})
-        text = dbc.ListGroupItemText(row['genres'], style={'margin': 0, 'font-size': 13})
-        recos_list.append(dbc.ListGroupItem([header, text], style={'padding-top': 0, 'padding-bottom': 0}))
-    return dbc.ListGroup(recos_list)
-    # listgroups = []
-    # for i in range(0, len(recos_list), 2): listgroups.append(dbc.ListGroup(recos_list[i:i+2], horizontal=True))
-    # return listgroups
+        header = html.A(row['title'], href=link, target='_blank', style={'text-decoration': 'none', 'font-size': 15})
+        body = html.Div(row['genres'], style={'font-size': 13})
+        cards.append([dbc.CardHeader(header, style={'padding': 10, 'padding-top': 7, 'padding-bottom': 7}),
+                      dbc.CardBody(body, style={'padding': 10})])
+    rows = []
+    for i in range(0, len(cards), 2):
+        rows.append(dbc.Row([
+            dbc.Col(dbc.Card(cards[i], color='primary', outline=True), width=6, style={'padding': 8}),
+            dbc.Col(dbc.Card(cards[i+1], color='primary', outline=True), width=6, style={'padding': 8})
+        ]))
+    return rows
 
 def get_layout(movies_dict, genres, user_ratings_file, user_ratings_df):
     layout = html.Div([
@@ -48,7 +51,7 @@ def get_layout(movies_dict, genres, user_ratings_file, user_ratings_df):
                     'Save ratings',
                     id='save-ratings',
                     color='warning'
-                ), width='auto', style={'padding-left': 10, 'padding-right': 5}
+                ), width='auto', style={'padding-left': 15, 'padding-right': 5}
             ),
             dbc.Col(
                 dcc.Dropdown(
@@ -115,7 +118,7 @@ def get_layout(movies_dict, genres, user_ratings_file, user_ratings_df):
                         'backgroundColor': 'white',
                         'fontWeight': 'bold'
                     }
-                ), style={'padding-right': 40}, width=5
+                ), style={'padding-right': 40, 'padding-top': 8}, width=5
             ),
             dbc.Col(
                 dbc.Spinner(
@@ -141,7 +144,7 @@ def get_layout(movies_dict, genres, user_ratings_file, user_ratings_df):
                     allowCross=False,
                     vertical=True
                 )
-            ], width=1, style={'padding-left': 30, 'padding-right': 0})
+            ], width='auto', style={'padding-left': 35, 'padding-right': 20})
         ]),
     ], style={'padding': 20})
     return layout
