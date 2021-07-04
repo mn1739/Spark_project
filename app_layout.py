@@ -12,11 +12,17 @@ def generate_recos_list(recos):
         cards.append([dbc.CardHeader(header, style={'padding': 10, 'padding-top': 7, 'padding-bottom': 7}),
                       dbc.CardBody(body, style={'padding': 10})])
     rows = []
-    for i in range(0, len(cards), 2):
-        rows.append(dbc.Row([
-            dbc.Col(dbc.Card(cards[i], color='primary', outline=True), width=6, style={'padding': 8}),
-            dbc.Col(dbc.Card(cards[i+1], color='primary', outline=True), width=6, style={'padding': 8})
-        ]))
+    l = len(cards)
+    for i in range(0, l, 2):
+        if i == l - 1:
+            rows.append(dbc.Row(
+                dbc.Col(dbc.Card(cards[i], color='primary', outline=True), width=6, style={'padding': 8}),
+            ))
+        else:
+            rows.append(dbc.Row([
+                dbc.Col(dbc.Card(cards[i], color='primary', outline=True), width=6, style={'padding': 8}),
+                dbc.Col(dbc.Card(cards[i+1], color='primary', outline=True), width=6, style={'padding': 8})
+            ]))
     return rows
 
 def get_layout(movies_dict, genres, user_ratings_file, user_ratings_df):

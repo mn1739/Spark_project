@@ -36,7 +36,7 @@ for row in temp: movies_dict_reverse[row['title']] = row['movieId']
 
 genres = []
 for row in temp: genres += row['genres'].split('|')
-genres = (set(genres))
+genres = sorted(set(genres))
 if '(no genres listed)' in genres: genres.remove('(no genres listed)')
 
 movies = movies.withColumn('genres', expr("REPLACE(genres, '|', ', ') AS genres")) \
@@ -61,21 +61,17 @@ def train_model(ratings, user_ratings, genres_selected, genres_excluded, years):
     if type(years) != str: recos = recos[(recos['year'] >= years[0]) & (recos['year'] <= years[-1])]
     if type(genres_selected) != str:
         genres_selected = set(genres_selected)
-        recos['filter'] = True
         for i, row in recos.iterrows():
             genres_list = row['genres'].split(', ')
             genre_set = genres_selected.intersection(set(genres_list))
-            recos.loc[i, 'filter'] = len(genre_set) > 0
-        recos = recos[recos['filter']].drop('filter', axis=1)
+            recos.loc[i, 'filter_1'] = len(genre_set) > 0
     if type(genres_excluded) != str:
         genres_excluded = set(genres_excluded)
-        recos['filter'] = True
         for i, row in recos.iterrows():
             genres_list = row['genres'].split(', ')
             genre_set = genres_excluded.intersection(set(genres_list))
-            recos.loc[i, 'filter'] = len(genre_set) == 0
-        recos = recos[recos['filter']].drop('filter', axis=1)
-    return recos[['title', 'genres']].head(20)
+            recos.loc[i, 'filter_2'] = len(genre_set) == 0
+    return recos[(recos['filter_1']) & (recos['filter_2'])][['title', 'genres']].head(20)
 
 
 # Dash app
