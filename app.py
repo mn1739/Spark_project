@@ -71,7 +71,13 @@ def train_model(ratings, user_ratings, genres_selected, genres_excluded, years):
             genres_list = row['genres'].split(', ')
             genre_set = genres_excluded.intersection(set(genres_list))
             recos.loc[i, 'filter_2'] = len(genre_set) == 0
-    return recos[(recos['filter_1']) & (recos['filter_2'])][['title', 'genres']].head(20)
+    if 'filter_1' in recos.columns and 'filter_2' in recos.columns:
+        return recos[(recos['filter_1']) & (recos['filter_2'])][['title', 'genres']].head(20)
+    if 'filter_1' in recos.columns:
+        return recos[recos['filter_1']][['title', 'genres']].head(20)
+    if 'filter_2' in recos.columns:
+        return recos[recos['filter_2']][['title', 'genres']].head(20)
+    return recos[['title', 'genres']].head(20)
 
 
 # Dash app
