@@ -12,6 +12,12 @@ os.chdir(Path(__file__).parent.absolute())
 from app_layout import get_layout, generate_recos_list
 
 
+# Dash app
+app = Dash(title='Movie Recommender', update_title='Updating Recos...',
+           external_stylesheets=[dbc.themes.BOOTSTRAP, 'https://codepen.io/chriddyp/pen/bWLwgP.css'])
+server = app.server
+
+
 # User ratings file
 user_ratings_file = 'User Ratings.csv'
 if os.path.isfile(user_ratings_file): user_ratings_df = pd.read_csv(user_ratings_file).to_dict('records')
@@ -78,11 +84,6 @@ def train_model(ratings, user_ratings, genres_selected, genres_excluded, years):
         return recos[recos['filter_2']][['title', 'genres']].head(20)
     return recos[['title', 'genres']].head(20)
 
-
-# Dash app
-app = Dash(title='Movie Recommender', update_title='Updating Recos...', prevent_initial_callbacks=True,
-           external_stylesheets=[dbc.themes.BOOTSTRAP, 'https://codepen.io/chriddyp/pen/bWLwgP.css'])
-server = app.server
 
 app.layout = get_layout(movies_dict, genres, user_ratings_file, user_ratings_df)
 
