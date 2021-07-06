@@ -6,7 +6,6 @@ import pandas as pd
 from dash import Dash
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
-import webbrowser
 import os
 from pathlib import Path
 os.chdir(Path(__file__).parent.absolute())
@@ -83,6 +82,7 @@ def train_model(ratings, user_ratings, genres_selected, genres_excluded, years):
 # Dash app
 app = Dash(title='Movie Recommender', update_title='Updating Recos...', prevent_initial_callbacks=True,
            external_stylesheets=[dbc.themes.BOOTSTRAP, 'https://codepen.io/chriddyp/pen/bWLwgP.css'])
+server = app.server
 
 app.layout = get_layout(movies_dict, genres, user_ratings_file, user_ratings_df)
 
@@ -127,5 +127,5 @@ def run_model(n, user_ratings, genres_selected, genres_excluded, years):
         recos = train_model(ratings_mod, user_ratings, genres_selected, genres_excluded, years)
         return generate_recos_list(recos)
 
-webbrowser.open('http://127.0.0.1:8050/')
-app.run_server()
+if __name__ == '__main__':
+    app.run_server(debug=True)
